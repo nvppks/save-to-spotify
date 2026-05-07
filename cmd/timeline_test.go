@@ -845,8 +845,11 @@ func TestHandleTimelineGet_Success(t *testing.T) {
 	if !strings.Contains(output, "spotify:track:abc") {
 		t.Errorf("output missing spotify entity URI: %s", output)
 	}
-	if !strings.Contains(output, "https://example.com") {
-		t.Errorf("output missing link URL: %s", output)
+	if strings.Contains(output, "https://example.com") {
+		t.Errorf("output should not include link URL: %s", output)
+	}
+	if !strings.Contains(output, "spotify:companion:l1") {
+		t.Errorf("output missing link companion URI: %s", output)
 	}
 }
 
@@ -856,7 +859,11 @@ func TestHandleTimelineGet_JSONOutput(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" && strings.Contains(r.URL.Path, "/timeline") {
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(w, `{"items":[{"spotify_entity":{"companion_uri":"spotify:companion:s1","start_time_ms":15000,"uri":"spotify:track:abc"}}]}`)
+			fmt.Fprint(w, `{"items":[
+				{"image":{"companion_uri":"spotify:companion:i1","start_time_ms":10000,"duration_ms":5000,"url":"https://example.com/image","title":"Book Cover"}},
+				{"link":{"companion_uri":"spotify:companion:l1","start_time_ms":12000,"duration_ms":5000,"url":"https://example.com/link"}},
+				{"spotify_entity":{"companion_uri":"spotify:companion:s1","start_time_ms":15000,"uri":"spotify:track:abc"}}
+			]}`)
 			return
 		}
 		http.NotFound(w, r)
@@ -890,16 +897,38 @@ func TestHandleTimelineGet_JSONOutput(t *testing.T) {
 		t.Fatalf("invalid JSON: %v\nOutput: %s", err, output)
 	}
 	items, ok := parsed["items"].([]any)
-	if !ok || len(items) != 1 {
-		t.Fatalf("items = %#v, want one item", parsed["items"])
+	if !ok || len(items) != 3 {
+		t.Fatalf("items = %#v, want three items", parsed["items"])
 	}
-	item, ok := items[0].(map[string]any)
+	imageItem, ok := items[0].(map[string]any)
 	if !ok {
 		t.Fatalf("item = %#v, want object", items[0])
 	}
-	entity, ok := item["spotify_entity"].(map[string]any)
+	image, ok := imageItem["image"].(map[string]any)
 	if !ok {
-		t.Fatalf("spotify_entity = %#v, want object", item["spotify_entity"])
+		t.Fatalf("image = %#v, want object", imageItem["image"])
+	}
+	if _, ok := image["url"]; ok {
+		t.Fatalf("image url should be omitted from response output, got %#v", image["url"])
+	}
+	linkItem, ok := items[1].(map[string]any)
+	if !ok {
+		t.Fatalf("item = %#v, want object", items[1])
+	}
+	link, ok := linkItem["link"].(map[string]any)
+	if !ok {
+		t.Fatalf("link = %#v, want object", linkItem["link"])
+	}
+	if _, ok := link["url"]; ok {
+		t.Fatalf("link url should be omitted from response output, got %#v", link["url"])
+	}
+	entityItem, ok := items[2].(map[string]any)
+	if !ok {
+		t.Fatalf("item = %#v, want object", items[2])
+	}
+	entity, ok := entityItem["spotify_entity"].(map[string]any)
+	if !ok {
+		t.Fatalf("spotify_entity = %#v, want object", entityItem["spotify_entity"])
 	}
 	if _, ok := entity["duration_ms"]; ok {
 		t.Fatalf("duration_ms should be omitted when absent, got %#v", entity["duration_ms"])

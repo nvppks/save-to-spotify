@@ -144,7 +144,6 @@ type timelineResponseImage struct {
 	CompanionURI string `json:"companion_uri"`
 	StartTimeMs  int    `json:"start_time_ms"`
 	DurationMs   int    `json:"duration_ms"`
-	URL          string `json:"url,omitempty"`
 	Title        string `json:"title,omitempty"`
 	Width        int    `json:"width,omitempty"`
 	Height       int    `json:"height,omitempty"`
@@ -154,7 +153,6 @@ type timelineResponseLink struct {
 	CompanionURI string `json:"companion_uri"`
 	StartTimeMs  int    `json:"start_time_ms"`
 	DurationMs   int    `json:"duration_ms"`
-	URL          string `json:"url"`
 }
 
 type timelineResponseSpotifyEntity struct {
@@ -751,9 +749,6 @@ func printTimelineHuman(result timelineResponse, episodeID string) {
 			if img.Width > 0 && img.Height > 0 {
 				fmt.Printf("    Dimensions: %dx%d\n", img.Width, img.Height)
 			}
-			if img.URL != "" {
-				fmt.Printf("    URL: %s\n", img.URL)
-			}
 		}
 	}
 
@@ -763,7 +758,7 @@ func printTimelineHuman(result timelineResponse, episodeID string) {
 		})
 		fmt.Println("\nLinks:")
 		for _, lnk := range links {
-			fmt.Printf("  %s at %dms for %dms\n", lnk.URL, lnk.StartTimeMs, lnk.DurationMs)
+			fmt.Printf("  Link at %dms for %dms\n", lnk.StartTimeMs, lnk.DurationMs)
 			fmt.Printf("    URI: %s\n", lnk.CompanionURI)
 		}
 	}
