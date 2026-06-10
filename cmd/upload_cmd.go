@@ -181,7 +181,10 @@ func handleUpload(args []string) error {
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := config.BackendURL(fmt.Sprintf("/shows/%s/episodes", showIDClean))
+	url, err := config.BackendURLPath("shows", showIDClean, "episodes")
+	if err != nil {
+		return fmt.Errorf("failed to build request URL: %w", err)
+	}
 	req, err := http.NewRequestWithContext(context.Background(), "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -307,7 +310,11 @@ func createShow(flags *uploadFlags, token *config.TokenData) (string, error) {
 		return "", fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(context.Background(), "POST", config.BackendURL("/shows"), bytes.NewReader(body))
+	url, err := config.BackendURLPath("shows")
+	if err != nil {
+		return "", fmt.Errorf("failed to build request URL: %w", err)
+	}
+	req, err := http.NewRequestWithContext(context.Background(), "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}

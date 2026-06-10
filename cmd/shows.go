@@ -27,7 +27,12 @@ type listShowsResponse struct {
 
 // listShows fetches all shows for the authenticated user from the backend API.
 func listShows(token *config.TokenData) ([]ShowSummary, error) {
-	req, err := http.NewRequestWithContext(context.Background(), "GET", config.BackendURL("/shows"), nil)
+	url, err := config.BackendURLPath("shows")
+	if err != nil {
+		return nil, fmt.Errorf("failed to build request URL: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -257,7 +262,11 @@ func handleShowsCreate(args []string) error {
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(context.Background(), "POST", config.BackendURL("/shows"), bytes.NewReader(body))
+	url, err := config.BackendURLPath("shows")
+	if err != nil {
+		return fmt.Errorf("failed to build request URL: %w", err)
+	}
+	req, err := http.NewRequestWithContext(context.Background(), "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -305,7 +314,10 @@ func handleShowsDelete(id string) error {
 		return err
 	}
 
-	url := config.BackendURL(fmt.Sprintf("/shows/%s", id))
+	url, err := config.BackendURLPath("shows", id)
+	if err != nil {
+		return fmt.Errorf("failed to build request URL: %w", err)
+	}
 	req, err := http.NewRequestWithContext(context.Background(), "DELETE", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -354,7 +366,11 @@ func handleShowsGet(id string) error {
 	// Strip URI prefix if provided
 	id = strings.TrimPrefix(id, "spotify:show:")
 
-	req, err := http.NewRequestWithContext(context.Background(), "GET", config.BackendURL(fmt.Sprintf("/shows/%s", id)), nil)
+	url, err := config.BackendURLPath("shows", id)
+	if err != nil {
+		return fmt.Errorf("failed to build request URL: %w", err)
+	}
+	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
